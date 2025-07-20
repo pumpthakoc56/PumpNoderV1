@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pump Noder AI - Modern Chat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        /* Base Styles & Global Reset (Modern & Clean Design) */
+        :root {
+            --primary-color: #4285F4; /* Google Blue */
+            --primary-light: #6aa8f6;
+            --primary-dark: #2a6ae0;
+            --background-main: #f8f9fa; /* Lighter background for more minimalist feel */
+            --background-card: #ffffff; /* White cards/elements */
+            --text-dark: #212529; /* Darker text for contrast */
+            --text-medium: #6c757d;
+            --text-light: #adb5bd;
+            --border-light: #e9ecef; /* Lighter border */
+            --shadow-light: rgba(0, 0, 0, 0.05); /* Softer shadows */
+            --shadow-medium: rgba(0, 0, 0, 0.1);
+            --success-color: #28a745;
+            --error-color: #dc3545;
+
+            /* Send Button Color */
+            --send-btn-bg: #343a40; /* Darker background for send button */
+            --send-btn-hover: #000000; /* Black on hover */
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif; /* Modern, readable font */
+            background-color: var(--background-main);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top for full screen feel */
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            color: var(--text-dark);
+            transition: background-color 0.3s ease;
+        }
+
+        .app-container {
+            display: flex;
+            width: 100vw; /* Always full width for phone-like experience */
+            height: 100vh; /* Always full height */
+            background-color: var(--background-card);
+            box-shadow: none; /* No shadow on full screen */
+            overflow: hidden;
+            position: relative;
+            border-radius: 0; /* No border-radius for full screen */
+            transition: all 0.4s ease;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background-color: #ffffff; /* Clean white sidebar */
+            color: var(--text-dark);
+            display: flex;
+            flex-direction: column;
+            padding: 20px 15px;
+            box-shadow: 2px 0 10px var(--shadow-medium);
+            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            height: 100%;
+            transform: translateX(-100%);
+            z-index: 1000;
+            border-right: 1px solid var(--border-light);
+        }
+
+        .sidebar.active {
+            transform: translateX(0);
+        }
+
+        /* User Profile */
+        .user-profile {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 25px;
+            background-color: var(--background-main); /* Lighter background for profile */
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow-light);
+        }
+
+        .user-profile:hover {
+            background-color: #e8e8e8;
+            box-shadow: 0 4px 12px var(--shadow-medium);
+        }
+
+        .user-profile .profile-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--primary-light);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.8em;
+            color: white;
+            margin-right: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .user-profile .profile-info strong {
+            display: block;
+            font-size: 1.1em;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        .user-profile .profile-info span {
+            font-size: 0.85em;
+            color: var(--text-medium);
+        }
+
+        /* Main Menu List */
+        .main-menu-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            list-style: none;
+            padding: 0;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .main-menu-list::-webkit-scrollbar {
+            display: none;
+        }
+
+        .main-menu-list li {
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            font-size: 0.95em;
+            font-weight: 400;
+            color: var(--text-dark);
+            background-color: transparent;
+        }
+
+        .main-menu-list li .material-icons {
+            margin-right: 15px;
+            font-size: 1.4em;
+            color: var(--primary-color);
+            transition: color 0.2s ease, transform 0.1s ease;
+        }
+
+        .main-menu-list li:hover {
+            background-color: #f0f0f0;
+            color: var(--text-dark);
+        }
+
+        .main-menu-list li:hover .material-icons {
+            color: var(--primary-dark);
+        }
+
+        .main-menu-list li.active {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 2px 8px var(--shadow-medium);
+        }
+        .main-menu-list li.active .material-icons {
+            color: white;
+        }
+
+        .menu-separator {
+            border-top: 1px solid var(--border-light);
+            margin: 20px 0;
+        }
+
+        /* Overlay */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.4); /* Lighter overlay */
+            z-index: 999;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Chat Area */
+        .chat-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background-color: var(--background-card);
+        }
+
+        /* Action Bar (Header) */
+        .action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background-color: #ffffff;
+            color: var(--text-dark);
+            border-bottom: 1px solid var(--border-light);
+            position: sticky;
+            top: 0;
+            z-index: 999;
+            box-shadow: 0 2px 8px var(--shadow-light);
+            border-radius: 0;
+        }
+
+        /* Sidebar Toggle - for Mobile (Menu Icon) */
+        .sidebar-toggle {
+            background: none;
+            border: none;
+            color: var(--text-medium);
+            font-size: 1.8em;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+            display: flex; /* Ensure material icon centers */
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-toggle:hover {
+            background-color: #f0f0f0;
+            color: var(--primary-color);
+        }
+
+        .action-bar .ai-name {
+            font-size: 1.4em;
+            font-weight: 500;
+            flex-grow: 1;
+            text-align: center;
+            color: var(--text-dark);
+        }
+
+        .more-options-container {
+            position: relative;
+        }
+
+        /* More Options Button - (Dots Vertical Icon) */
+        .more-options-btn {
+            background: none;
+            border: none;
+            color: var(--text-medium);
+            font-size: 1.8em;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+            display: flex; /* Ensure material icon centers */
+            align-items: center;
+            justify-content: center;
+        }
+
+        .more-options-btn:hover {
+            background-color: #f0f0f0;
+            color: var(--primary-color);
+        }
+
+        /* Dropdown Menu */
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            background-color: var(--background-card);
+            border-radius: 8px;
+            box-shadow: 0 5px 15px var(--shadow-medium);
+            padding: 10px 0;
+            min-width: 180px;
+            z-index: 1000;
+            display: none;
+            list-style: none;
+            margin: 0;
+            border: 1px solid var(--border-light);
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .dropdown-menu.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .dropdown-menu li a {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+            color: var(--text-dark);
+            text-decoration: none;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            font-size: 0.9em;
+            font-weight: 400;
+        }
+
+        .dropdown-menu li a:hover {
+            background-color: #f0f0f0;
+            color: var(--primary-color);
+        }
+        
+        .dropdown-menu li a .material-icons {
+            color: var(--text-light);
+            margin-right: 12px;
+            font-size: 1.2em;
+            transition: color 0.2s ease;
+        }
+
+        .dropdown-menu li a:hover .material-icons {
+            color: var(--primary-color);
+        }
+
+        /* Chat Messages Area */
+        .chat-messages {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background-color: var(--background-main);
+            scrollbar-width: thin;
+            scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
+        }
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+        .chat-messages::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .chat-messages::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 0, 0, 0.15);
+            border-radius: 10px;
+        }
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(0, 0, 0, 0.25);
+        }
+
+        .message {
+            max-width: 80%; /* Slightly smaller for cleaner look */
+            padding: 12px 18px;
+            border-radius: 20px;
+            line-height: 1.5;
+            box-shadow: 0 2px 8px var(--shadow-light);
+            font-size: 0.95em;
+            animation: fadeIn 0.3s ease-out;
+            word-wrap: break-word;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background-color: var(--primary-color);
+            color: white;
+            border-bottom-right-radius: 8px; /* Slightly less rounded */
+            margin-right: 5px;
+        }
+
+        .ai-message {
+            align-self: flex-start;
+            background-color: var(--background-card);
+            color: var(--text-dark);
+            border-bottom-left-radius: 8px; /* Slightly less rounded */
+            border: 1px solid var(--border-light);
+            margin-left: 5px;
+        }
+        
+        /* New style for question type replies */
+        .ai-question {
+            align-self: flex-start;
+            background-color: #e0e7fd; /* Lighter blue/purple tint */
+            color: var(--text-dark);
+            border-bottom-left-radius: 8px;
+            border: 1px solid #c3d6ff;
+            font-style: italic;
+        }
+
+        .message img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-top: 10px;
+            box-shadow: 0 1px 5px var(--shadow-light);
+        }
+
+        /* Typing Indicator */
+        .typing-indicator {
+            align-self: flex-start;
+            background-color: var(--background-card);
+            color: var(--text-dark);
+            padding: 10px 16px;
+            border-radius: 18px;
+            margin-left: 5px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            width: fit-content;
+            box-shadow: 0 2px 8px var(--shadow-light);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .typing-indicator span {
+            width: 7px;
+            height: 7px;
+            background-color: var(--text-light);
+            border-radius: 50%;
+            display: inline-block;
+            animation: bounce 1.2s infinite ease-in-out; /* Faster bounce */
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.15s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        @keyframes bounce {
+            0%, 80%, 100% {
+                transform: translateY(0);
+                background-color: var(--text-light);
+            }
+            40% {
+                transform: translateY(-4px);
+                background-color: var(--primary-color);
+            }
+        }
+
+        /* Chat Input Area */
+        .chat-input {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            background-color: #ffffff;
+            border-top: 1px solid var(--border-light);
+            box-shadow: 0 -2px 8px var(--shadow-light);
+            border-radius: 0;
+        }
+
+        .chat-input .input-wrapper {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            background-color: var(--background-main);
+            border-radius: 25px; /* More rounded */
+            padding: 8px 15px;
+            border: 1px solid var(--border-light);
+            transition: all 0.2s ease;
+        }
+        .chat-input .input-wrapper:focus-within {
+            box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.3);
+            border-color: var(--primary-color);
+        }
+
+        .chat-input input[type="text"] {
+            flex-grow: 1;
+            padding: 6px 0;
+            border: none;
+            background: transparent;
+            font-size: 1em;
+            outline: none;
+            color: var(--text-dark);
+            caret-color: var(--primary-color);
+        }
+
+        .chat-input input[type="text"]::placeholder {
+            color: var(--text-light);
+            opacity: 0.9;
+        }
+
+        .file-upload-btn {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            font-size: 1.6em;
+            padding: 5px;
+            margin-right: 12px;
+            transition: color 0.2s ease, transform 0.1s ease;
+            display: flex; /* Material Icons needs this */
+            align-items: center;
+            justify-content: center;
+        }
+        .file-upload-btn:hover {
+            color: var(--primary-color);
+            transform: scale(1.05);
+        }
+        .file-upload-btn input[type="file"] {
+            display: none;
+        }
+
+        /* Send Button - Icon Only, Dark, Round */
+        .send-btn {
+            background-color: var(--send-btn-bg); /* Dark background */
+            color: white;
+            border: none;
+            width: 48px; /* Fixed width for perfect circle */
+            height: 48px; /* Fixed height for perfect circle */
+            border-radius: 50%; /* Perfect circle */
+            margin-left: 15px;
+            cursor: pointer;
+            font-size: 1.4em; /* Larger icon */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); /* Darker shadow for dark button */
+        }
+        .send-btn .material-icons {
+            margin-left: 0; /* No margin as it's the only content */
+            font-size: 1em; /* Adjust icon size within button */
+        }
+
+        .send-btn:hover {
+            background-color: var(--send-btn-hover); /* Black on hover */
+            transform: translateY(-1px) scale(1.01);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .send-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* --- Mobile Responsiveness (Default is now full screen) --- */
+        @media (max-width: 767px) {
+            body {
+                align-items: flex-start;
+            }
+            .app-container {
+                border-radius: 0;
+                box-shadow: none;
+            }
+            .sidebar {
+                width: 75%;
+                max-width: 300px;
+            }
+            .action-bar, .chat-input {
+                border-radius: 0;
+            }
+            .action-bar .ai-name {
+                font-size: 1.3em;
+            }
+            .message {
+                max-width: 90%;
+            }
+            .send-btn {
+                width: 44px; /* Slightly smaller for mobile */
+                height: 44px;
+                font-size: 1.3em;
+            }
+            .file-upload-btn {
+                font-size: 1.4em;
+                margin-right: 8px;
+            }
+            .chat-input input[type="text"] {
+                font-size: 0.95em;
+            }
+        }
+
+        /* Desktop/Larger Screens (apply max-width here) */
+        @media (min-width: 768px) {
+            body {
+                align-items: center;
+            }
+            .app-container {
+                width: 90%;
+                max-width: 800px; /* Slightly wider for desktop */
+                height: 90vh;
+                border-radius: 12px;
+                box-shadow: 0 10px 40px var(--shadow-medium);
+            }
+
+            .sidebar {
+                position: relative;
+                left: 0;
+                transform: translateX(0);
+                padding-top: 20px;
+                box-shadow: 2px 0 10px var(--shadow-light);
+                border-top-left-radius: 12px;
+                border-bottom-left-radius: 12px;
+                border-right: 1px solid var(--border-light);
+            }
+
+            .sidebar-toggle {
+                display: none;
+            }
+
+            .chat-area {
+                border-left: 1px solid var(--border-light);
+            }
+
+            .action-bar {
+                justify-content: space-between;
+                padding-left: 20px;
+                border-top-left-radius: 0;
+                border-top-right-radius: 12px;
+            }
+             .action-bar .ai-name {
+                text-align: left;
+                flex-grow: 0;
+                margin-left: 10px; /* Adjust spacing */
+            }
+             .chat-input {
+                border-bottom-left-radius: 0;
+                border-bottom-right-radius: 12px;
+            }
+        }
+
+        /* --- Ads Styles --- */
+        .ad-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6); /* Slightly lighter */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .ad-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .ad-container {
+            background-color: var(--background-card);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px var(--shadow-medium);
+            text-align: center;
+            max-width: 90%;
+            width: 400px;
+            transform: translateY(-20px) scale(0.95);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            border: 1px solid var(--primary-color);
+            position: relative;
+        }
+
+        .ad-overlay.active .ad-container {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+
+        .ad-container h3 {
+            color: var(--primary-color);
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.6em;
+            font-weight: 500;
+        }
+
+        .ad-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px var(--shadow-light);
+        }
+
+        .ad-content p {
+            color: var(--text-dark);
+            font-size: 1em;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .ad-countdown {
+            color: var(--text-medium);
+            font-size: 0.9em;
+            margin-top: 10px;
+            font-weight: 300;
+        }
+
+        .ad-close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 1.4em;
+            color: var(--text-light);
+            cursor: pointer;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .ad-close-btn:hover {
+            color: var(--text-dark);
+            background-color: #f0f0f0;
+            transform: rotate(90deg);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar" id="sidebar">
+            <div class="user-profile" id="userProfile">
+                <div class="profile-avatar"><span class="material-icons">account_circle</span></div>
+                <div class="profile-info">
+                    <strong>Guest User</strong>
+                    <span>hello@pumponder.ai</span>
+                </div>
+            </div>
+            
+            <ul class="main-menu-list" id="mainMenuList">
+                <li id="menuNewChat"><span class="material-icons">add_circle_outline</span> စကားဝိုင်းအသစ်</li>
+                <li id="menuSavedChats"><span class="material-icons">star_outline</span> သိမ်းဆည်းထားသော စကားဝိုင်းများ</li>
+                <li id="menuArchivedChats"><span class="material-icons">history</span> မှတ်တမ်းတင်ထားသော စကားဝိုင်းများ</li>
+                
+                <div class="menu-separator"></div>
+
+                <li id="menuSettings"><span class="material-icons">settings</span> ဆက်တင်များ</li>
+                <li id="menuNotifications"><span class="material-icons">notifications_none</span> အကြောင်းကြားချက်များ</li>
+                <li id="menuPrivacySecurity"><span class="material-icons">security</span> ကိုယ်ရေးလုံခြုံမှုနှင့် လုံခြုံရေး</li>
+                <li id="menuThemes" class="active"><span class="material-icons">palette</span> ပုံစံများ (Themes)</li>
+
+                <div class="menu-separator"></div>
+
+                <li id="menuHelpFeedback"><span class="material-icons">help_outline</span> အကူအညီနှင့် အကြံပြုရန်</li>
+                <li id="menuAbout"><span class="material-icons">info_outline</span> Pump Noder အကြောင်း</li>
+                <li id="menuLogout"><span class="material-icons">logout</span> အကောင့်ထွက်ရန်</li>
+            </ul>
+        </div>
+
+        <div class="overlay" id="overlay"></div>
+
+        <div class="chat-area" id="chatArea">
+            <div class="action-bar">
+                <button class="sidebar-toggle" id="sidebarToggle"><span class="material-icons">menu</span></button>
+                <div class="ai-name">Pump Noder AI</div>
+                <div class="more-options-container">
+                    <button class="more-options-btn" id="moreOptionsBtn">
+                        <span class="material-icons">more_vert</span> </button>
+                    <ul class="dropdown-menu" id="dropdownMenu">
+                        <li><a href="#" id="googleSearch"><span class="material-icons">search</span> ဂူဂဲလ် ရှာဖွေမှု</a></li>
+                        <li><a href="#" id="gitHubRepo"><span class="material-icons">code</span> GitHub repository</a></li>
+                        <li><a href="#" id="aboutPumpNoder"><span class="material-icons">info</span> Pump Noder အကြောင်း</a></li>
+                        <li><a href="#" id="clearChatBtn"><span class="material-icons">delete_sweep</span> လက်ရှိစကားဝိုင်း ရှင်းလင်းရန်</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <div class="message ai-message">မင်္ဂလာပါ! Pump Noder မှ ကြိုဆိုပါတယ်။ ဘာများ သိချင်ပါသလဲ?</div>
+            </div>
+
+            <div class="chat-input">
+                <div class="input-wrapper">
+                    <label for="imageUpload" class="file-upload-btn">
+                        <span class="material-icons">image</span>
+                        <input type="file" id="imageUpload" accept="image/*">
+                    </label>
+                    <input type="text" id="userInput" placeholder="မေးချင်တာ ရိုက်ထည့်ပါ..." autocomplete="off">
+                </div>
+                <button class="send-btn" id="sendBtn">
+                    <span class="material-icons">send</span> </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="ad-overlay" id="adOverlay">
+        <div class="ad-container">
+            <button class="ad-close-btn" id="adCloseBtn"><span class="material-icons">close</span></button>
+            <h3>ကြော်ငြာ (Advertisement)</h3>
+            <div class="ad-content" id="adContent">
+                </div>
+            <div class="ad-countdown" id="adCountdown"></div>
+        </div>
+    </div>
+
+    <audio id="typingStartSound" src="https://assets.mixkit.co/sfx/preview/mixkit-typewriter-writing-279.mp3" preload="auto"></audio>
+    <audio id="typingEndSound" src="https://assets.mixkit.co/sfx/preview/mixkit-keyboard-return-key-278.mp3" preload="auto"></audio>
+
+    <script>
+        // API URLs - Make sure these are CORRECT for your Google Sheets!
+        // Chatbot Data Sheet: ID and Sheet Name '1'
+        const API_URL = 'https://opensheet.elk.sh/1KUPfOqKwNkt_rMTEzvBOwctKNEjti9oqUEAHz6CVkqM/1'; 
+        // Menu Links Sheet: ID and Sheet Name '1'
+        const MENU_API_URL = 'https://opensheet.elk.sh/1p8JxtgK5IZZ9XSxndZk1I1YWA2P2TnIHTYyJkhqpw0I/1'; 
+        // Ad Data Sheet: ID and Sheet Name '1'
+        const AD_API_URL = 'https://opensheet.elk.sh/11zofdKylyGyYSvCbXEa8l2kW-Jx2gFvhlhm20dRXHac/1'; // Updated Ad data sheet URL
+
+        // DOM Elements
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const chatMessages = document.getElementById('chatMessages');
+        const imageUpload = document.getElementById('imageUpload');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        const moreOptionsBtn = document.getElementById('moreOptionsBtn');
+        const dropdownMenu = document.getElementById('dropdownMenu');
+        const clearChatBtn = document.getElementById('clearChatBtn');
+
+        const adOverlay = document.getElementById('adOverlay');
+        const adContent = document.getElementById('adContent');
+        const adCountdown = document.getElementById('adCountdown');
+        const adCloseBtn = document.getElementById('adCloseBtn');
+
+        // Audio elements
+        const typingStartSound = document.getElementById('typingStartSound');
+        const typingEndSound = document.getElementById('typingEndSound');
+
+        const menuItems = [
+            'userProfile', 'menuNewChat', 'menuSavedChats', 'menuArchivedChats',
+            'menuSettings', 'menuNotifications', 'menuPrivacySecurity', 'menuThemes',
+            'menuHelpFeedback', 'menuAbout', 'menuLogout'
+        ];
+        const dropdownItems = [
+            'googleSearch', 'gitHubRepo', 'aboutPumpNoder', 'clearChatBtn'
+        ];
+
+        let apiData = []; 
+        let menuLinks = {}; 
+        let adData = []; // To store ad data from the sheet
+        let consecutiveMessageCounts = new Map(); 
+        let userMessageCount = 0; // To track user messages for ad display
+
+        let adTimer;
+        let countdownInterval;
+        const AD_DURATION = 5; // seconds
+        let currentAdIndex = 0; // To track the current ad being displayed
+        const MESSAGES_BEFORE_AD = 5; // Show ad after every 5 user messages
+
+        let typingIndicatorElement = null; // To hold the typing indicator div
+        let currentTypingEffectTimeout = null; // To clear previous typing effects
+
+        // Fetch data from Google Sheet API
+        async function fetchApiData() {
+            console.log('Attempting to fetch chat API data from:', API_URL);
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        console.error(`ERROR: Sheet data not found! Check if '${API_URL}' is correct and your sheet name ('1' in URL) matches exactly. Also, ensure your Google Sheet is publicly accessible.`);
+                    } else if (response.status === 403) {
+                        console.error(`ERROR: Access denied! Check your Google Sheet's 'Share' settings. It must be set to 'Anyone with the link' (Viewer).`);
+                    } else {
+                        console.error(`ERROR: HTTP error! Status: ${response.status} - ${response.statusText}`);
+                    }
+                    return; 
+                }
+                apiData = await response.json();
+                console.log('Chat API Data loaded successfully:', apiData);
+                if (apiData.length > 0 && (!apiData[0].Trigger || !apiData[0].reply_content || !apiData[0].reply_type || !apiData[0].Order)) {
+                    console.warn('WARNING: Your Chat Data Sheet might be missing one or more of the required column headers (Trigger, reply_content, reply_type, Order). Please ensure they are spelled EXACTLY as shown (case-sensitive).');
+                }
+            } catch (error) {
+                console.error('ERROR fetching chat API data:', error);
+            }
+        }
+
+        // Fetch menu links from Google Sheet API
+        async function fetchMenuLinks() {
+            console.log('Attempting to fetch menu links from:', MENU_API_URL);
+            try {
+                const response = await fetch(MENU_API_URL);
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        console.error(`ERROR: Menu data not found! Check if '${MENU_API_URL}' is correct and your sheet name ('1' in URL) matches exactly. Also, ensure your Google Sheet is publicly accessible.`);
+                    } else if (response.status === 403) {
+                        console.error(`ERROR: Access denied to Menu Sheet! Check your Google Sheet's 'Share' settings. It must be set to 'Anyone with the link' (Viewer).`);
+                    } else {
+                        console.error(`ERROR: HTTP error! Status: ${response.status} - ${response.statusText}`);
+                    }
+                    return;
+                }
+                const data = await response.json();
+                menuLinks = {}; 
+                data.forEach(item => {
+                    if (item.Item_Name && item.link) {
+                        menuLinks[item.Item_Name] = item.link;
+                    } else {
+                         console.warn('WARNING: Menu Sheet might be missing "Item_Name" or "link" for an entry.');
+                    }
+                });
+                console.log('Menu Links loaded successfully:', menuLinks);
+                attachMenuListeners(); 
+            } catch (error) {
+                console.error('ERROR fetching menu links:', error);
+            }
+        }
+
+        // Fetch ad data from Google Sheet API
+        async function fetchAdData() {
+            console.log('Attempting to fetch ad data from:', AD_API_URL);
+            try {
+                const response = await fetch(AD_API_URL);
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        console.error(`ERROR: Ad data not found! Check if '${AD_API_URL}' is correct and your sheet name ('1' in URL) matches exactly. Also, ensure your Google Sheet is publicly accessible.`);
+                    } else if (response.status === 403) {
+                        console.error(`ERROR: Access denied to Ad Sheet! Check your Google Sheet's 'Share' settings. It must be set to 'Anyone with the link' (Viewer).`);
+                    } else {
+                        console.error(`ERROR: HTTP error! Status: ${response.status} - ${response.statusText}`);
+                    }
+                    adData = []; // Clear adData if fetch fails
+                    return;
+                }
+                adData = await response.json();
+                console.log('Ad Data loaded successfully:', adData);
+                // Validate expected columns in Ad sheet
+                if (adData.length > 0 && (!adData[0].Ad_ID || !adData[0].Image_URL || !adData[0].Text_Content || !adData[0].Link)) {
+                    console.warn('WARNING: Your Ad Data Sheet might be missing one or more of the required column headers (Ad_ID, Image_URL, Text_Content, Link). Please ensure they are spelled EXACTLY as shown (case-sensitive).');
+                }
+            } catch (error) {
+                console.error('ERROR fetching ad data:', error);
+                adData = []; // Clear adData if fetch fails
+            }
+        }
+
+        // Function to append message to chat window (without typing effect)
+        function appendMessage(sender, text, imageUrl = null, messageType = 'text') {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+            if (sender === 'user') {
+                messageDiv.classList.add('user-message');
+            } else {
+                if (messageType === 'question') {
+                    messageDiv.classList.add('ai-question');
+                } else {
+                    messageDiv.classList.add('ai-message');
+                }
+            }
+
+            if (text) {
+                const linkRegex = /(https?:\/\/[^\s]+)/g;
+                let formattedText = String(text).replace(/\n/g, '<br>'); 
+                messageDiv.innerHTML = formattedText.replace(linkRegex, '<a href="$1" target="_blank" style="color: #1a73e8; text-decoration: underline;">$1</a>'); /* Changed link color */
+            }
+            
+            if (imageUrl) {
+                const imgElement = document.createElement('img');
+                imgElement.src = imageUrl;
+                imgElement.alt = "Chat Image"; 
+                messageDiv.appendChild(imgElement);
+            }
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Typing Effect Function
+        function typeMessage(sender, text, imageUrl = null, messageType = 'text', delay = 30) {
+            return new Promise(resolve => {
+                // Clear any previous typing effect to prevent overlapping
+                if (currentTypingEffectTimeout) {
+                    clearTimeout(currentTypingEffectTimeout);
+                }
+
+                // Remove previous typing indicator if it exists
+                if (typingIndicatorElement && typingIndicatorElement.parentNode) {
+                    typingIndicatorElement.parentNode.removeChild(typingIndicatorElement);
+                    typingIndicatorElement = null;
+                }
+                
+                // Add typing indicator
+                if (sender === 'ai') {
+                    typingIndicatorElement = document.createElement('div');
+                    typingIndicatorElement.classList.add('typing-indicator');
+                    typingIndicatorElement.innerHTML = '<span></span><span></span><span></span>';
+                    chatMessages.appendChild(typingIndicatorElement);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                    typingStartSound.currentTime = 0;
+                    typingStartSound.play().catch(e => console.error("Error playing typing start sound:", e));
+                }
+
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message');
+                if (sender === 'user') {
+                    messageDiv.classList.add('user-message');
+                } else {
+                    if (messageType === 'question') {
+                        messageDiv.classList.add('ai-question');
+                    } else {
+                        messageDiv.classList.add('ai-message');
+                    }
+                }
+                
+                let i = 0;
+                const linkRegex = /(https?:\/\/[^\s]+)/g;
+                const originalText = String(text).replace(/\n/g, '<br>');
+                
+                function typeChar() {
+                    if (i < originalText.length) {
+                        if (originalText.substring(i, i + 4) === '<br>') { // Check for <br> tag
+                            messageDiv.innerHTML += '<br>';
+                            i += 4;
+                        } else {
+                            messageDiv.innerHTML += originalText.charAt(i);
+                            i++;
+                        }
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                        currentTypingEffectTimeout = setTimeout(typeChar, delay);
+                    } else {
+                        // After typing, replace plain links with anchor tags
+                        messageDiv.innerHTML = messageDiv.innerHTML.replace(linkRegex, '<a href="$1" target="_blank" style="color: #1a73e8; text-decoration: underline;">$1</a>'); /* Changed link color */
+                        if (imageUrl) {
+                            const imgElement = document.createElement('img');
+                            imgElement.src = imageUrl;
+                            imgElement.alt = "Chat Image";
+                            messageDiv.appendChild(imgElement);
+                        }
+                        
+                        // Remove typing indicator and play end sound
+                        if (typingIndicatorElement && typingIndicatorElement.parentNode) {
+                            typingIndicatorElement.parentNode.removeChild(typingIndicatorElement);
+                            typingIndicatorElement = null;
+                            typingEndSound.currentTime = 0;
+                            typingEndSound.play().catch(e => console.error("Error playing typing end sound:", e));
+                        }
+                        resolve();
+                    }
+                }
+                
+                if (sender === 'ai') {
+                    // Temporarily append an empty div for typing effect
+                    chatMessages.appendChild(messageDiv);
+                    typeChar();
+                } else {
+                    // For user messages, append directly
+                    chatMessages.appendChild(messageDiv);
+                    if (imageUrl) {
+                        const imgElement = document.createElement('img');
+                        imgElement.src = imageUrl;
+                        imgElement.alt = "Chat Image";
+                        messageDiv.appendChild(imgElement);
+                    }
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                    resolve();
+                }
+            });
+        }
+
+
+        // Function to simulate AI response (now with API integration)
+        async function getAIResponse(message, imageData = null) {
+            const cleanedUserMessage = message.toLowerCase().trim();
+
+            if (apiData.length === 0) {
+                console.warn('API data not loaded. Returning loading message.');
+                return [{ type: 'text', content: 'ခဏလေး စောင့်ပါနော်။ အချက်အလက်တွေ Load နေတုန်းပါ။' }];
+            }
+
+            const matchedTriggers = apiData.filter(item => 
+                item.Trigger && typeof item.Trigger === 'string' && cleanedUserMessage.includes(item.Trigger.toLowerCase().trim())
+            );
+
+            if (matchedTriggers.length > 0) {
+                matchedTriggers.sort((a, b) => b.Trigger.length - a.Trigger.length);
+                const mostSpecificTrigger = matchedTriggers[0].Trigger.toLowerCase().trim();
+
+                let currentCount = (consecutiveMessageCounts.get(mostSpecificTrigger) || 0) + 1;
+                consecutiveMessageCounts.set(mostSpecificTrigger, currentCount);
+                console.log(`Consecutive '${mostSpecificTrigger}' detected. Current count: ${currentCount}`);
+
+                const relevantReplies = apiData
+                    .filter(item => item.Trigger && item.Trigger.toLowerCase().trim() === mostSpecificTrigger && item.Order)
+                    .sort((a, b) => (parseInt(a.Order) || 0) - (parseInt(b.Order) || 0));
+
+                console.log("Filtered and sorted relevant replies for current trigger:", relevantReplies);
+
+                if (relevantReplies.length > 0) {
+                    let responseItem;
+                    responseItem = relevantReplies.find(item => parseInt(item.Order) === currentCount);
+
+                    if (!responseItem && currentCount > 2) { 
+                        responseItem = relevantReplies.find(item => parseInt(item.Order) === 3);
+                    }
+                    if (!responseItem) { 
+                        responseItem = relevantReplies[relevantReplies.length - 1]; 
+                    }
+                    
+                    if (responseItem && responseItem.reply_content) {
+                        console.log("Selected response item:", responseItem);
+                        const finalResponses = [];
+
+                        if (responseItem.reply_type && responseItem.reply_type.toLowerCase().trim() === 'image') {
+                            finalResponses.push({ type: 'image', content: responseItem.reply_content });
+                        } else {
+                            const responseParts = String(responseItem.reply_content).split('\n');
+                            for (let j = 0; j < responseParts.length; j++) {
+                                const partContent = responseParts[j].trim();
+                                if (partContent) {
+                                    let type = 'text'; 
+                                    if (responseItem.reply_type && responseItem.reply_type.toLowerCase().trim() === 'question') {
+                                        if (responseParts.length > 1 && j === responseParts.length - 1) { 
+                                            type = 'question';
+                                        } else if (responseParts.length === 1) { 
+                                            type = 'question';
+                                        }
+                                    }
+                                    finalResponses.push({ type: type, content: partContent });
+                                }
+                            }
+                        }
+                        return finalResponses;
+                    }
+                }
+            } else {
+                consecutiveMessageCounts.clear(); 
+                console.log('No API trigger matched. Resetting consecutive counts.');
+            }
+
+            // --- Fallback responses (if no API match) ---
+            console.log('No specific API trigger matched. Checking built-in responses.');
+            if (imageData) {
+                return [{ type: 'text', content: 'ပုံကို လက်ခံရရှိပါပြီ။ ပုံနဲ့ပတ်သက်ပြီး ဘာသိချင်ပါသလဲ?' }];
+            } else if (cleanedUserMessage.includes('မင်္ဂလာပါ')) {
+                return [{ type: 'text', content: 'မင်္ဂလာပါရှင်။ Pump Noder မှ ကြိုဆိုပါတယ်။ ဘယ်လိုကူညီပေးရမလဲ?' }];
+            } else if (cleanedUserMessage.includes('နာမည်')) {
+                return [{ type: 'text', content: 'ကျွန်တော့်နာမည် Pump Noder ပါ။ Google Gemini API ကို အခြေခံထားပါတယ်။' }];
+            } else if (cleanedUserMessage.includes('ကျေးဇူးတင်ပါတယ်')) {
+                return [{ type: 'text', content: 'ဝမ်းသာပါတယ်။ ထပ်ပြီး ဘာများ သိချင်ပါသေးလဲ?' }];
+            } else if (cleanedUserMessage.includes('အချိန်')) {
+                const currentDateTime = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Yangon"})); 
+                return [{ type: 'text', content: `လက်ရှိအချိန်ကတော့ ${currentDateTime.toLocaleTimeString('my-MM')} ဖြစ်ပါတယ်။` }];
+            } else if (cleanedUserMessage.includes('ရက်စွဲ')) {
+                const currentDateTime = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Yangon"})); 
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                return [{ type: 'text', content: `ယနေ့ ရက်စွဲကတော့ ${currentDateTime.toLocaleDateString('my-MM', options)} ဖြစ်ပါတယ်။` }];
+            }
+            else {
+                console.log('No built-in response matched. Using default fallback.');
+                return [{ type: 'text', content: 'စိတ်မကောင်းပါဘူး။ ဒီအကြောင်းအရာကို ကျွန်တော် သေချာနားမလည်သေးပါဘူး။ တခြားဘာများ မေးချင်ပါသလဲ?' }];
+            }
+        }
+
+        // Function to handle new chat logic (clears current chat)
+        function startNewChat() {
+            chatMessages.innerHTML = '<div class="message ai-message">မင်္ဂလာပါ! Pump Noder မှ ကြိုဆိုပါတယ်။ ဘာများ သိချင်ပါသလဲ?</div>';
+            userInput.value = '';
+            imageUpload.value = '';
+            closeSidebar();
+            consecutiveMessageCounts.clear();
+            userMessageCount = 0; // Reset message count when chat is cleared
+        }
+
+        // Helper function to close sidebar and overlay
+        function closeSidebar() {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+        }
+
+        // --- Ads Functionality (now pulling from Google Sheet sequentially) ---
+        function showAd() {
+            if (adData.length === 0) {
+                console.warn('No ad data available to display.');
+                return;
+            }
+
+            // Get the current ad based on currentAdIndex
+            const currentAd = adData[currentAdIndex];
+            
+            // Clear previous ad content
+            adContent.innerHTML = '';
+
+            // Add ad image if available
+            if (currentAd.Image_URL) {
+                const adImage = document.createElement('img');
+                adImage.src = currentAd.Image_URL;
+                adImage.alt = currentAd.Ad_ID || 'Advertisement';
+                adContent.appendChild(adImage);
+            }
+            // Add ad text
+            if (currentAd.Text_Content) {
+                const adText = document.createElement('p');
+                adText.textContent = currentAd.Text_Content;
+                adContent.appendChild(adText);
+            }
+
+            // If there's a link, make the content clickable
+            if (currentAd.Link) {
+                adContent.style.cursor = 'pointer';
+                adContent.onclick = () => {
+                    window.open(currentAd.Link, '_blank');
+                    hideAd(); // Close ad after clicking
+                };
+            } else {
+                adContent.style.cursor = 'default';
+                adContent.onclick = null;
+            }
+
+            let timeLeft = AD_DURATION;
+            adCountdown.textContent = `(${timeLeft} စက္ကန့်အတွင်း ပိတ်ပါမည်...)`;
+            
+            adOverlay.classList.add('active'); // Show ad overlay
+
+            // Clear any existing timers before starting new ones
+            clearTimeout(adTimer);
+            clearInterval(countdownInterval);
+
+            countdownInterval = setInterval(() => {
+                timeLeft--;
+                adCountdown.textContent = `(${timeLeft} စက္ကန့်အတွင်း ပိတ်ပါမည်...)`;
+                if (timeLeft <= 0) {
+                    hideAd();
+                    // After hiding, increment index for the next ad, and loop back if it's the last one
+                    currentAdIndex = (currentAdIndex + 1) % adData.length;
+                    console.log('Next ad index:', currentAdIndex);
+                }
+            }, 1000);
+
+            // Set a timeout to automatically close the ad after AD_DURATION
+            adTimer = setTimeout(hideAd, AD_DURATION * 1000);
+        }
+
+        function hideAd() {
+            adOverlay.classList.remove('active'); // Hide ad overlay
+            clearTimeout(adTimer); // Clear the auto-close timer
+            clearInterval(countdownInterval); // Clear the countdown interval
+            adContent.onclick = null; // Remove click listener
+        }
+
+        // Event listener for the close button
+        adCloseBtn.addEventListener('click', hideAd);
+
+        // Send message handler
+        sendBtn.addEventListener('click', async () => {
+            const userMessage = userInput.value.trim();
+            const imageFile = imageUpload.files[0];
+            
+            if (userMessage || imageFile) {
+                let imageUrl = null;
+                let imageData = null; 
+
+                // Increment user message count
+                userMessageCount++; 
+                console.log(`User message count: ${userMessageCount}`);
+
+                if (imageFile) {
+                    const reader = new FileReader();
+                    reader.onload = async (e) => {
+                        imageUrl = e.target.result;
+                        imageData = imageUrl; 
+                        appendMessage('user', userMessage, imageUrl); // User message no typing effect
+                        userInput.value = '';
+                        imageUpload.value = '';
+
+                        const aiResponses = await getAIResponse(userMessage, imageData);
+                        if (Array.isArray(aiResponses)) {
+                            for (const response of aiResponses) {
+                                await typeMessage('ai', response.type === 'image' ? '' : response.content, response.type === 'image' ? response.content : null, response.type);
+                            }
+                        } else {
+                            console.error("getAIResponse did not return an array:", aiResponses);
+                            await typeMessage('ai', 'အမှားအယွင်းတစ်ခု ဖြစ်ပွားခဲ့ပါသည်။'); 
+                        }
+                        // Show ad after every MESSAGES_BEFORE_AD user messages
+                        if (adData.length > 0 && userMessageCount % MESSAGES_BEFORE_AD === 0) { 
+                            showAd();
+                        }
+                    };
+                    reader.readAsDataURL(imageFile);
+                } else {
+                    appendMessage('user', userMessage); // User message no typing effect
+                    userInput.value = '';
+
+                    const aiResponses = await getAIResponse(userMessage);
+                    if (Array.isArray(aiResponses)) {
+                        for (const response of aiResponses) {
+                            await typeMessage('ai', response.type === 'image' ? '' : response.content, response.type === 'image' ? response.content : null, response.type);
+                        }
+                    } else {
+                        console.error("getAIResponse did not return an array:", aiResponses);
+                        await typeMessage('ai', 'အမှားအယွင်းတစ်ခု ဖြစ်ပွားခဲ့ပါသည်။'); 
+                    }
+                    // Show ad after every MESSAGES_BEFORE_AD user messages
+                    if (adData.length > 0 && userMessageCount % MESSAGES_BEFORE_AD === 0) { 
+                        showAd();
+                    }
+                }
+            }
+        });
+
+        // Enter key press handler
+        userInput.addEventListener('keypress', async (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                sendBtn.click();
+            }
+        });
+
+        // Sidebar Toggle for Mobile
+        sidebarToggle.addEventListener('click', (event) => {
+            event.stopPropagation();
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        });
+
+        // Close sidebar when clicking on the overlay or outside sidebar on mobile
+        document.addEventListener('click', (event) => {
+            if (!sidebar.contains(event.target) && !sidebarToggle.contains(event.target) && sidebar.classList.contains('active')) {
+                closeSidebar();
+            }
+        });
+
+        // Function to attach event listeners to menu items based on fetched links
+        function attachMenuListeners() {
+            menuItems.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    const newElement = element.cloneNode(true);
+                    element.parentNode.replaceChild(newElement, element);
+
+                    newElement.addEventListener('click', (event) => {
+                        event.preventDefault(); 
+                        closeSidebar();
+                        const link = menuLinks[id]; 
+
+                        if (id === 'menuNewChat') { // New Chat option in sidebar
+                            startNewChat();
+                        } else if (link && link !== '#') { 
+                            window.open(link, '_blank');
+                        } else {
+                            console.log(`${newElement.innerText.trim()} clicked. No specific action or external link defined.`);
+                        }
+                    });
+                }
+            });
+
+            dropdownItems.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    const newElement = element.cloneNode(true);
+                    element.parentNode.replaceChild(newElement, element);
+
+                    newElement.addEventListener('click', (event) => {
+                        event.preventDefault(); 
+                        dropdownMenu.classList.remove('active'); 
+                        const link = menuLinks[id]; 
+
+                        if (id === 'clearChatBtn') { // Clear Chat button in dropdown
+                            startNewChat(); 
+                        } else if (link && link !== '#') { 
+                            window.open(link, '_blank');
+                        } else {
+                             console.log(`${newElement.innerText.trim()} clicked. No specific action or external link defined.`);
+                        }
+                    });
+                }
+            });
+        }
+
+        // More Options Dropdown Toggle
+        moreOptionsBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            dropdownMenu.classList.toggle('active');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (event) => {
+            if (!moreOptionsBtn.contains(event.target) && !dropdownMenu.contains(event.target)) {
+                dropdownMenu.classList.remove('active');
+            }
+        });
+
+        // Initial load of all data (chat, menu, ads), then start chat and show first ad
+        async function initializeChatbot() {
+            await fetchApiData(); 
+            await fetchMenuLinks();
+            await fetchAdData(); // Fetch ad data
+            
+            // Show the first ad on page load
+            if (adData.length > 0) {
+                showAd(); 
+            } else {
+                console.warn('Ad data not loaded or empty. Initial ad display skipped.');
+            }
+            startNewChat(); 
+        }
+
+        initializeChatbot();
+    </script>
+</body>
+</html>
